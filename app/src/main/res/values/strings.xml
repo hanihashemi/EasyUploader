@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">EasyUploader</string>
+    <string name="button_upload_file">Start to uploading file</string>
+</resources>
