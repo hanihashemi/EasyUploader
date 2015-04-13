@@ -9,80 +9,82 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 /**
  * Created by hani on 4/8/15.
  */
-public class UploadFile {
+public class UploadFile implements Runnable {
     private String serverUrl;
     private String filePath;
+    private UploadFileListener uploadFileListener;
+    private List<RequestHeader> requestHeaders;
 
     public UploadFile() {
 
     }
 
-    public void send(String serverUrl, String filePath) {
+    public void send(
+            String serverUrl,
+            String filePath,
+            List<RequestHeader> requestHeaders,
+            UploadFileListener uploadFileListener
+    ) {
         this.serverUrl = serverUrl;
         this.filePath = filePath;
+        this.requestHeaders = requestHeaders;
+        this.uploadFileListener = uploadFileListener;
 
-        new AsyncUpload(serverUrl, filePath).start();
+        new Thread(this).start();
     }
 
-    private class AsyncUpload implements Runnable {
-        private String serverUrl;
-        private String filePath;
+    @Override
+    public void run() {
+        try {
+            File file = new File(getFilePath());
+            if (!file.exists())
+                throw new FileNotFoundException("File isn't exist: " + file.getAbsolutePath());
+            URL url = new URL(getServerUrl());
 
-        public AsyncUpload(String serverUrl, String filePath) {
-            this.serverUrl = serverUrl;
-            this.filePath = filePath;
-        }
+            HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+            httpURLConnection.setDoOutput(true);
+            httpURLConnection.setDoInput(true);
+            httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setChunkedStreamingMode(2048);
+            for (RequestHeader requestHeader : requestHeaders)
+                httpURLConnection.addRequestProperty(requestHeader.getKey(), requestHeader.getValue());
+            httpURLConnection.connect();
 
-        public void start() {
-            new Thread(this).start();
-        }
+            OutputStream out = httpURLConnection.getOutputStream();
 
-        @Override
-        public void run() {
-            try {
-                File file = new File(getFilePath());
-                if (!file.exists())
-                    throw new FileNotFoundException("File isn't exist: " + file.getAbsolutePath());
-                URL url = new URL(getServerUrl());
+            byte[] buffer = new byte[2048];
+            FileInputStream fileInputStream = new FileInputStream(file);
 
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setDoOutput(true);
-                httpURLConnection.setDoInput(true);
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.setChunkedStreamingMode(2048);
-//            httpURLConnection.addRequestProperty("X-Auth-Token", MyApplication.getInstance().getUserToken());
-                httpURLConnection.connect();
-
-                OutputStream out = httpURLConnection.getOutputStream();
-
-                byte[] buffer = new byte[2048];
-                FileInputStream fileInputStream = new FileInputStream(file);
-
-                int bytesRead;
-                while ((bytesRead = fileInputStream.read(buffer)) > 0) {
-                    out.write(buffer, 0, bytesRead);
-                }
-
-                InputStream is = httpURLConnection.getInputStream();
-                byte[] b1 = new byte[1024];
-                StringBuffer bufferResponse = new StringBuffer();
-
-                while (is.read(b1) != -1)
-                    bufferResponse.append(new String(b1));
-
-                httpURLConnection.disconnect();
-                System.out.println(bufferResponse.toString());
-
-                fileInputStream.close();
-                out.close();
-                httpURLConnection.disconnect();
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            long totalFileBytes = file.length();
+            long totalBytesRead = 0;
+            int bytesRead;
+            while ((bytesRead = fileInputStream.read(buffer)) > 0) {
+                out.write(buffer, 0, bytesRead);
+                totalBytesRead += bytesRead;
+                uploadFileListener.onProgress(totalBytesRead, totalFileBytes);
             }
+
+            InputStream is = httpURLConnection.getInputStream();
+            byte[] b1 = new byte[1024];
+            StringBuffer bufferResponse = new StringBuffer();
+
+            while (is.read(b1) != -1)
+                bufferResponse.append(new String(b1));
+
+            httpURLConnection.disconnect();
+
+            uploadFileListener.onSuccess(bufferResponse.toString());
+
+            fileInputStream.close();
+            out.close();
+            httpURLConnection.disconnect();
+        } catch (Exception ex) {
+            uploadFileListener.onFail(ex);
         }
     }
 
@@ -92,5 +94,13 @@ public class UploadFile {
 
     public String getFilePath() {
         return filePath;
+    }
+
+    public interface UploadFileListener {
+        void onSuccess(String response);
+
+        void onFail(Exception exception);
+
+        void onProgress(long sent, long total);
     }
 }

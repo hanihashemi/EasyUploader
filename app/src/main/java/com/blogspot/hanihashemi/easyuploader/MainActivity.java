@@ -14,10 +14,11 @@ import android.widget.Button;
 
 import com.blogspot.hanihashemi.easyuploaderlibrary.UploadFile;
 
-public class MainActivity extends ActionBarActivity implements View.OnClickListener {
+public class MainActivity extends ActionBarActivity implements View.OnClickListener, UploadFile.UploadFileListener {
 
     private static final int SELECT_PHOTO = 100;
     public static final String IMAGE_FILES = "image/*";
+    public static final String TAG = "MyActivity";
     private Button btnClickMe;
 
     @Override
@@ -53,7 +54,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     private void uploadImage(String imagePath) {
         UploadFile uploadFile = new UploadFile();
-        uploadFile.send("http://192.168.1.103/", imagePath);
+        uploadFile.send("http://192.168.1.103/", imagePath, this);
     }
 
     public String getPath(Uri uri) {
@@ -68,5 +69,20 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         String filePath = cursor.getString(columnIndex);
         cursor.close();
         return filePath;
+    }
+
+    @Override
+    public void onSuccess(String response) {
+        Log.i(TAG, response);
+    }
+
+    @Override
+    public void onFail(Exception exception) {
+        exception.printStackTrace();
+    }
+
+    @Override
+    public void onProgress(long sent, long total) {
+        Log.i(TAG, ((sent * 100) / total) + "");
     }
 }
