@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.blogspot.hanihashemi.easyuploaderlibrary.RequestHeader;
@@ -24,6 +25,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     public static final String TAG = "MyActivity";
     private Button btnClickMe;
     private ProgressBar progressBar;
+    private TextView txtProgress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +35,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         btnClickMe = (Button) findViewById(R.id.btnClickMe);
         progressBar = (ProgressBar) findViewById(R.id.progress);
         btnClickMe.setOnClickListener(this);
+        txtProgress = (TextView) findViewById(R.id.txtProgress);
     }
 
     @Override
@@ -103,9 +106,16 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     @Override
-    public void onProgress(long sent, long total) {
-        int progress = (int) (100 * sent / total);
-        Log.i(TAG, progress + " %");
-        progressBar.setProgress(progress);
+    public void onProgress(final long sent, final long total) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                int progress = (int) (100 * sent / total);
+
+                progressBar.setProgress(progress);
+                txtProgress.setText(progress + "%");
+            }
+        });
+
     }
 }
