@@ -1,10 +1,9 @@
 package com.blogspot.hanihashemi.easyuploaderlibrary;
 
-import android.content.Context;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -46,13 +45,7 @@ public class UploadFile implements Runnable {
                 throw new FileNotFoundException("File isn't exist: " + file.getAbsolutePath());
             URL url = new URL(getServerUrl());
 
-            HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-            httpURLConnection.setDoOutput(true);
-            httpURLConnection.setDoInput(true);
-            httpURLConnection.setRequestMethod("POST");
-            httpURLConnection.setChunkedStreamingMode(2048);
-            for (RequestHeader requestHeader : requestHeaders)
-                httpURLConnection.addRequestProperty(requestHeader.getKey(), requestHeader.getValue());
+            HttpURLConnection httpURLConnection = setConnectionSettings(url);
             httpURLConnection.connect();
 
             OutputStream out = httpURLConnection.getOutputStream();
@@ -70,22 +63,36 @@ public class UploadFile implements Runnable {
             }
 
             InputStream is = httpURLConnection.getInputStream();
-            byte[] b1 = new byte[1024];
-            StringBuffer bufferResponse = new StringBuffer();
-
-            while (is.read(b1) != -1)
-                bufferResponse.append(new String(b1));
-
-            httpURLConnection.disconnect();
+            StringBuffer bufferResponse = readResponse(is);
 
             uploadFileListener.onSuccess(bufferResponse.toString());
-
+            httpURLConnection.disconnect();
             fileInputStream.close();
             out.close();
             httpURLConnection.disconnect();
         } catch (Exception ex) {
             uploadFileListener.onFail(ex);
         }
+    }
+
+    private HttpURLConnection setConnectionSettings(URL url) throws IOException {
+        HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+        httpURLConnection.setDoOutput(true);
+        httpURLConnection.setDoInput(true);
+        httpURLConnection.setRequestMethod("POST");
+        httpURLConnection.setChunkedStreamingMode(2048);
+        for (RequestHeader requestHeader : requestHeaders)
+            httpURLConnection.addRequestProperty(requestHeader.getKey(), requestHeader.getValue());
+        return httpURLConnection;
+    }
+
+    private StringBuffer readResponse(InputStream is) throws IOException {
+        byte[] b1 = new byte[1024];
+        StringBuffer bufferResponse = new StringBuffer();
+
+        while (is.read(b1) != -1)
+            bufferResponse.append(new String(b1));
+        return bufferResponse;
     }
 
     public String getServerUrl() {
