@@ -62,6 +62,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     private void uploadImage(String imagePath) {
         progressBar.setProgress(0);
+        txtProgress.setText("0 %");
 
         UploadFile uploadFile = new UploadFile();
 
