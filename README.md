@@ -3,6 +3,9 @@ Easy photo uploader with progress bar :D
 
 I looked, but could not find simple library for android to upload file to Server, So we wrote this library with my friend.
 
+# آپلود فایل آسان
+تو اینترنت جستجو کردم اما نتونستم لایبرری خوبی برای آپلود عکس به همراه پراگرس برای اندروید پیدا کنم این شد که با یکی از دوستان اینو نوشتیم و اینجا گذاشتیم تا بقیه هم بتونن استفاده کنند.
+
 ## Server code
 
 PHP:
@@ -16,6 +19,6 @@ PHP:
 ?>
 ```
 
-## Screenshot: 
+## Screenshot
 
 ![Easy Uploader](https://github.com/hanihashemi/EasyUploader/blob/master/images/screenshot.png)
