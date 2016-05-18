@@ -1,7 +1,8 @@
 package com.blogspot.hanihashemi.easyuploaderlibrary;
 
 /**
- * Created by hani on 4/13/15.
+ * Created by Hani on 4/13/15.
+ * http://oostaa.com
  */
 public class RequestHeader {
     private String key;

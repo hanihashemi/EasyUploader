@@ -1,25 +1,31 @@
 package com.blogspot.hanihashemi.easyuploaderlibrary;
 
+import android.util.Log;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
 /**
- * Created by hani on 4/8/15.
+ * Created by Hani on 4/8/15.
+ * http://oostaa.com
  */
-public class UploadFile implements Runnable {
-    private String serverUrl;
+public class EasyUploder implements Runnable {
+
+    private static final int HTTP_CREATED = 201;
+    private static final int CONNECTION_TIMEOUT = 10000;
+    private String url;
     private String filePath;
     private UploadFileListener uploadFileListener;
     private List<RequestHeader> requestHeaders;
+    private static final int HTTP_SUCCESS = 200;
 
-    public UploadFile() {
+    public EasyUploder() {
 
     }
 
@@ -29,7 +35,7 @@ public class UploadFile implements Runnable {
             List<RequestHeader> requestHeaders,
             UploadFileListener uploadFileListener
     ) {
-        this.serverUrl = serverUrl;
+        this.url = serverUrl;
         this.filePath = filePath;
         this.requestHeaders = requestHeaders;
         this.uploadFileListener = uploadFileListener;
@@ -43,7 +49,9 @@ public class UploadFile implements Runnable {
             File file = new File(getFilePath());
             if (!file.exists())
                 throw new FileNotFoundException("File isn't exist: " + file.getAbsolutePath());
-            URL url = new URL(getServerUrl());
+            URL url = new URL(getUrl());
+
+            Log.d("send request to: %s", url.toString());
 
             HttpURLConnection httpURLConnection = setConnectionSettings(url);
             httpURLConnection.connect();
@@ -59,19 +67,20 @@ public class UploadFile implements Runnable {
             while ((bytesRead = fileInputStream.read(buffer)) > 0) {
                 out.write(buffer, 0, bytesRead);
                 totalBytesRead += bytesRead;
-                uploadFileListener.onProgress(totalBytesRead, totalFileBytes);
+                out.flush();
+                uploadFileListener.onProgressUploading((int) (100 * totalBytesRead / totalFileBytes));
             }
 
-            InputStream is = httpURLConnection.getInputStream();
-            StringBuffer bufferResponse = readResponse(is);
+            if (httpURLConnection.getResponseCode() == HTTP_CREATED || httpURLConnection.getResponseCode() == HTTP_SUCCESS)
+                uploadFileListener.onSuccessUploading("file://" + getFilePath());
+            else
+                uploadFileListener.onFailUploading(new Exception("unsuccessful uploading"), getUrl());
 
-            uploadFileListener.onSuccess(bufferResponse.toString());
-            httpURLConnection.disconnect();
             fileInputStream.close();
             out.close();
             httpURLConnection.disconnect();
         } catch (Exception ex) {
-            uploadFileListener.onFail(ex);
+            uploadFileListener.onFailUploading(ex, getUrl());
         }
     }
 
@@ -81,22 +90,15 @@ public class UploadFile implements Runnable {
         httpURLConnection.setDoInput(true);
         httpURLConnection.setRequestMethod("POST");
         httpURLConnection.setChunkedStreamingMode(2048);
+        httpURLConnection.setConnectTimeout(CONNECTION_TIMEOUT);
+        httpURLConnection.setReadTimeout(CONNECTION_TIMEOUT);
         for (RequestHeader requestHeader : requestHeaders)
             httpURLConnection.addRequestProperty(requestHeader.getKey(), requestHeader.getValue());
         return httpURLConnection;
     }
 
-    private StringBuffer readResponse(InputStream is) throws IOException {
-        byte[] b1 = new byte[1024];
-        StringBuffer bufferResponse = new StringBuffer();
-
-        while (is.read(b1) != -1)
-            bufferResponse.append(new String(b1));
-        return bufferResponse;
-    }
-
-    public String getServerUrl() {
-        return serverUrl;
+    public String getUrl() {
+        return url;
     }
 
     public String getFilePath() {
@@ -104,10 +106,10 @@ public class UploadFile implements Runnable {
     }
 
     public interface UploadFileListener {
-        void onSuccess(String response);
+        void onSuccessUploading(String response);
 
-        void onFail(Exception exception);
+        void onFailUploading(Exception exception, String url);
 
-        void onProgress(long sent, long total);
+        void onProgressUploading(int percent);
     }
 }
