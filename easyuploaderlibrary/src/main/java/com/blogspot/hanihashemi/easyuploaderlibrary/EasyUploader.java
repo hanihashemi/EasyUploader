@@ -19,11 +19,11 @@ public class EasyUploader implements Runnable {
 
     private static final int HTTP_CREATED = 201;
     private static final int CONNECTION_TIMEOUT = 10000;
+    private static final int HTTP_SUCCESS = 200;
     private String url;
     private String filePath;
     private UploadFileListener uploadFileListener;
     private List<RequestHeader> requestHeaders;
-    private static final int HTTP_SUCCESS = 200;
 
     public EasyUploader() {
 
@@ -68,18 +68,23 @@ public class EasyUploader implements Runnable {
                 out.write(buffer, 0, bytesRead);
                 totalBytesRead += bytesRead;
                 out.flush();
-                uploadFileListener.onProgressUploading((int) (100 * totalBytesRead / totalFileBytes));
+                uploadFileListener.onProgressUploading((int) (91 * totalBytesRead / totalFileBytes));
                 Thread.sleep(10); // :D
             }
 
-            if (httpURLConnection.getResponseCode() == HTTP_CREATED || httpURLConnection.getResponseCode() == HTTP_SUCCESS)
-                uploadFileListener.onSuccessUploading("file://" + getFilePath());
-            else
-                uploadFileListener.onFailUploading(new Exception("unsuccessful uploading"), getUrl());
+            int statusCode = httpURLConnection.getResponseCode();
+
+            uploadFileListener.onProgressUploading(100);
+            Thread.sleep(400); // :D
 
             fileInputStream.close();
             out.close();
             httpURLConnection.disconnect();
+
+            if (statusCode == HTTP_CREATED || statusCode == HTTP_SUCCESS) {
+                uploadFileListener.onSuccessUploading("file://" + getFilePath());
+            } else
+                uploadFileListener.onFailUploading(new Exception("unsuccessful uploading"), getUrl());
         } catch (Exception ex) {
             uploadFileListener.onFailUploading(ex, getUrl());
         }
