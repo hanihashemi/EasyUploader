@@ -14,16 +14,17 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.blogspot.hanihashemi.easyuploaderlibrary.EasyUploader;
 import com.blogspot.hanihashemi.easyuploaderlibrary.RequestHeader;
-import com.blogspot.hanihashemi.easyuploaderlibrary.EasyUploder;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, EasyUploder.UploadFileListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, EasyUploader.UploadFileListener {
 
     public static final String TAG = "MyActivity";
     private static final int SELECT_PHOTO = 100;
     private Button btnClickMe;
+    private TextView message;
     private ProgressBar progressBar;
     private TextView txtProgress;
 
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         progressBar = (ProgressBar) findViewById(R.id.progress);
         btnClickMe.setOnClickListener(this);
         txtProgress = (TextView) findViewById(R.id.txtProgress);
+        message = (TextView) findViewById(R.id.message);
     }
 
     @Override
@@ -60,10 +62,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void uploadImage(String imagePath) {
+        progressBar.setVisibility(View.VISIBLE);
+        txtProgress.setVisibility(View.VISIBLE);
+
         progressBar.setProgress(0);
         txtProgress.setText("0 %");
+        message.setText("");
 
-        EasyUploder uploadFile = new EasyUploder();
+        EasyUploader uploadFile = new EasyUploader();
 
         ArrayList<RequestHeader> requestHeaders = new ArrayList<>();
         requestHeaders.add(new RequestHeader("Cache-Control", "no-cache"));
@@ -95,6 +101,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void run() {
                 Toast.makeText(getApplicationContext(), "File uploaded", Toast.LENGTH_LONG).show();
+                message.setText("File Uploaded");
+                progressBar.setVisibility(View.GONE);
+                txtProgress.setVisibility(View.GONE);
             }
         });
         Log.i(TAG, response);
@@ -103,6 +112,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onFailUploading(Exception exception, String url) {
         exception.printStackTrace();
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                message.setText("Uplaod failed");
+                progressBar.setVisibility(View.GONE);
+                txtProgress.setVisibility(View.GONE);
+            }
+        });
     }
 
     @Override
