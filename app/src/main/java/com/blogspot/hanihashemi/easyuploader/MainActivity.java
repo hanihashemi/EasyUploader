@@ -72,10 +72,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         EasyUploader uploadFile = new EasyUploader();
 
         ArrayList<RequestHeader> requestHeaders = new ArrayList<>();
-        requestHeaders.add(new RequestHeader("Cache-Control", "no-cache"));
+        requestHeaders.add(new RequestHeader("X-Auth-Token", "eyJpdiI6ImxQQkhYcHNINm1MUjgxQzBXWjNIUnc9PSIsInZhbHVlIjoiUDlVaXRDR2RvNnFIN1VrcnpNM2JPQVBTZGM0YWttZW1SR1wvdVRKckVyeG9XN3hnaWRcL05TZFFTbFFmQ0tMMFlnMEtzeVZqWU92V2oyTVZhdHREZnZ1UDdzNDhKZHJkems1WjZhQlBBZUJQT29JdjlSaTBscDBJSHBnaVRjb1RXbmx5TW42Y3VEU0VzSnAyTmJQMFBwbjVmd3hFNzRJZ3VBUFg0S2VMZUs4aEI0OVwvcmRyUVhPOTc2eTlETER4K0w3WmUxdGEweENwaWJMRFFBS3VURklTdUtLWE01RW5MME12THo3cXlMdng4OD0iLCJtYWMiOiI2MDE2NTMyM2FlODA1ZjNjZmM5N2IyNjI1NjYxNThkZWZmZTgyY2UwMWVmMzVhNTA3NGVlNmE4ODkyZDA5ZWQ0In0"));
 
         uploadFile.send(
-                "http://192.168.2.124/",
+                "http://84.241.32.199:83/api/v0/businesses/-1/reviews/1/photo",
                 imagePath,
                 requestHeaders,
                 this);
