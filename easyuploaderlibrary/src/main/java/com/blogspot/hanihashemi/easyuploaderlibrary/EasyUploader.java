@@ -15,7 +15,7 @@ import java.util.List;
  * Created by Hani on 4/8/15.
  * http://oostaa.com
  */
-public class EasyUploder implements Runnable {
+public class EasyUploader implements Runnable {
 
     private static final int HTTP_CREATED = 201;
     private static final int CONNECTION_TIMEOUT = 10000;
@@ -25,7 +25,7 @@ public class EasyUploder implements Runnable {
     private List<RequestHeader> requestHeaders;
     private static final int HTTP_SUCCESS = 200;
 
-    public EasyUploder() {
+    public EasyUploader() {
 
     }
 
@@ -69,6 +69,7 @@ public class EasyUploder implements Runnable {
                 totalBytesRead += bytesRead;
                 out.flush();
                 uploadFileListener.onProgressUploading((int) (100 * totalBytesRead / totalFileBytes));
+                Thread.sleep(10); // :D
             }
 
             if (httpURLConnection.getResponseCode() == HTTP_CREATED || httpURLConnection.getResponseCode() == HTTP_SUCCESS)
