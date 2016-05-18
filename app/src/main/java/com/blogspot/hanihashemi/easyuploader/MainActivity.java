@@ -5,7 +5,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -15,14 +15,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.blogspot.hanihashemi.easyuploaderlibrary.RequestHeader;
-import com.blogspot.hanihashemi.easyuploaderlibrary.UploadFile;
+import com.blogspot.hanihashemi.easyuploaderlibrary.EasyUploder;
 
 import java.util.ArrayList;
 
-public class MainActivity extends ActionBarActivity implements View.OnClickListener, UploadFile.UploadFileListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, EasyUploder.UploadFileListener {
 
-    private static final int SELECT_PHOTO = 100;
     public static final String TAG = "MyActivity";
+    private static final int SELECT_PHOTO = 100;
     private Button btnClickMe;
     private ProgressBar progressBar;
     private TextView txtProgress;
@@ -45,8 +45,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        Intent i = new Intent(Intent.ACTION_PICK,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(i, SELECT_PHOTO);
     }
 
@@ -64,13 +63,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         progressBar.setProgress(0);
         txtProgress.setText("0 %");
 
-        UploadFile uploadFile = new UploadFile();
+        EasyUploder uploadFile = new EasyUploder();
 
         ArrayList<RequestHeader> requestHeaders = new ArrayList<>();
         requestHeaders.add(new RequestHeader("Cache-Control", "no-cache"));
 
         uploadFile.send(
-                "http://192.168.1.120/",
+                "http://192.168.2.124/",
                 imagePath,
                 requestHeaders,
                 this);
@@ -91,7 +90,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     @Override
-    public void onSuccess(String response) {
+    public void onSuccessUploading(String response) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -102,21 +101,18 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     @Override
-    public void onFail(Exception exception) {
+    public void onFailUploading(Exception exception, String url) {
         exception.printStackTrace();
     }
 
     @Override
-    public void onProgress(final long sent, final long total) {
+    public void onProgressUploading(final int percent) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                int progress = (int) (100 * sent / total);
-
-                progressBar.setProgress(progress);
-                txtProgress.setText(progress + "%");
+                progressBar.setProgress(percent);
+                txtProgress.setText(String.format("%s %%", percent));
             }
         });
-
     }
 }
