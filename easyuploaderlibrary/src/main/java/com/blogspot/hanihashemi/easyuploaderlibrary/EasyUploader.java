@@ -1,7 +1,5 @@
 package com.blogspot.hanihashemi.easyuploaderlibrary;
 
-import android.util.Log;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,20 +24,26 @@ public class EasyUploader implements Runnable {
     private List<RequestHeader> requestHeaders;
 
     public EasyUploader() {
-
     }
 
-    public void send(
-            String serverUrl,
-            String filePath,
-            List<RequestHeader> requestHeaders,
-            UploadFileListener uploadFileListener
-    ) {
+    public EasyUploader(String serverUrl, String filePath, List<RequestHeader> requestHeaders, UploadFileListener uploadFileListener) {
+        this.url = serverUrl;
+        this.filePath = filePath;
+        this.requestHeaders = requestHeaders;
+        this.uploadFileListener = uploadFileListener;
+    }
+
+    @Deprecated
+    public void send(String serverUrl, String filePath, List<RequestHeader> requestHeaders, UploadFileListener uploadFileListener) {
         this.url = serverUrl;
         this.filePath = filePath;
         this.requestHeaders = requestHeaders;
         this.uploadFileListener = uploadFileListener;
 
+        new Thread(this).start();
+    }
+
+    public void send() {
         new Thread(this).start();
     }
 
@@ -50,8 +54,6 @@ public class EasyUploader implements Runnable {
             if (!file.exists())
                 throw new FileNotFoundException("File isn't exist: " + file.getAbsolutePath());
             URL url = new URL(getUrl());
-
-            Log.d("send request to: %s", url.toString());
 
             HttpURLConnection httpURLConnection = setConnectionSettings(url);
             httpURLConnection.connect();
@@ -83,6 +85,7 @@ public class EasyUploader implements Runnable {
                 uploadFileListener.onSuccessUploading("file://" + getFilePath());
             } else
                 uploadFileListener.onFailUploading(new Exception("unsuccessful uploading"), getUrl());
+
         } catch (Exception ex) {
             uploadFileListener.onFailUploading(ex, getUrl());
         }
