@@ -69,13 +69,11 @@ public class EasyUploader implements Runnable {
                 totalBytesRead += bytesRead;
                 out.flush();
                 uploadFileListener.onProgressUploading((int) (91 * totalBytesRead / totalFileBytes));
-                Thread.sleep(10); // :D
             }
 
             int statusCode = httpURLConnection.getResponseCode();
 
             uploadFileListener.onProgressUploading(100);
-            Thread.sleep(400); // :D
 
             fileInputStream.close();
             out.close();
